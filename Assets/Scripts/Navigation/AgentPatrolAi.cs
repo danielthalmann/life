@@ -9,14 +9,20 @@ public class AgentPatrolAi : MonoBehaviour
     protected Vector3 destination;
     protected float timeout;
 
+
     protected bool inMoving;
     protected int index;
 
-    [field: SerializeField]
     public Vector3 velocity { get; private set; }
+
+
+    public float wait;
+    protected bool inWating;
+    protected bool inCatching;
 
     public GameObject[] patrolPoints;
 
+    public FieldOfView fov;
 
     // Start is called before the first frame update
     void Start()
@@ -25,6 +31,8 @@ public class AgentPatrolAi : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         destination = this.transform.position;
         inMoving = false;
+        inWating = false;
+        inCatching = false;
         velocity = agent.velocity;
         timeout = 0;
 
@@ -32,26 +40,57 @@ public class AgentPatrolAi : MonoBehaviour
 
     public void Update()
     {
-
-        if (inMoving)
+        if (patrolPoints.Length == 0)
         {
-            timeout += Time.deltaTime;
-            if (timeout > 0.1  && agent.velocity == Vector3.zero)
+            return;
+        }
+        velocity = agent.velocity;
+
+        if (fov != null)
+        {
+            if (fov.canSeePlayer)
             {
-                timeout = 0;
-                inMoving = false;
+                inCatching = true;
+                SetDestination(fov.player.transform.position);
+            } else
+            {
+                if (inCatching)
+                {
+                    SetDestination(patrolPoints[index].transform.position);
+                    inCatching = false;
+                }
             }
         }
 
-        velocity = agent.velocity;
-
-        if (!inMoving && patrolPoints.Length > 0)
+        if (inMoving)
         {
+            if (Vector3.Distance(transform.position, destination) < .1f)
+            {
+                inMoving = false;
+                inWating = true;
+                timeout = 0;
+            }
+        } 
+        else
+        {
+            if (inWating)
+            {
+                timeout += Time.deltaTime;
+                if (timeout > wait) 
+                {
+                    inWating = false;
+                    timeout = 0;
+                }
 
-            SetDestination(patrolPoints[index].transform.position);
-            ++index;
-            if (index > patrolPoints.Length - 1)
-                index = 0;
+            } else
+            {
+
+                SetDestination(patrolPoints[index].transform.position);
+                ++index;
+                if (index > patrolPoints.Length - 1)
+                    index = 0;
+            }
+
         }
 
     }
@@ -65,7 +104,9 @@ public class AgentPatrolAi : MonoBehaviour
     {
         this.destination = destination;
         agent.destination = destination;
-        inMoving = true; 
+        inMoving = true;
+        timeout = 0;
+        velocity = Vector3.zero;
     }
 
     private void OnDrawGizmos()
