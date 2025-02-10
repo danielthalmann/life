@@ -695,8 +695,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e734d0b70094b19488b90b831cde7a30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 8
-  angle: 40
+  radius: 9
+  angle: 64
   player: {fileID: 0}
   targetMask:
     serializedVersion: 2
@@ -718,12 +718,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f8a8cc12ece5a2458b6cde4e28a935f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wait: 0
+  wait: 10
   patrolPoints:
   - {fileID: 747039680}
   - {fileID: 1278586007}
   - {fileID: 476545818}
-  fov: {fileID: 0}
+  fov: {fileID: 1117873122}
 --- !u!195 &1117873124
 NavMeshAgent:
   m_ObjectHideFlags: 0
