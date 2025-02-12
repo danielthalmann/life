@@ -12,17 +12,27 @@ public class AgentPatrolAi : MonoBehaviour
 
     protected bool inMoving;
     protected int index;
+    protected AgentState state;
 
     public Vector3 velocity { get; private set; }
 
-
     public float wait;
+
+    public float limitDistance;
+
     protected bool inWating;
-    protected bool inCatching;
+    protected bool inView;
 
     public GameObject[] patrolPoints;
 
     public FieldOfView fov;
+
+    public enum AgentState
+    {
+        Wait,
+        Patrol,
+        CatchUp,
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -32,9 +42,10 @@ public class AgentPatrolAi : MonoBehaviour
         destination = this.transform.position;
         inMoving = false;
         inWating = false;
-        inCatching = false;
+        inView = false;
         velocity = agent.velocity;
         timeout = 0;
+        state = AgentState.Wait;
 
     }
 
@@ -50,14 +61,19 @@ public class AgentPatrolAi : MonoBehaviour
         {
             if (fov.canSeePlayer)
             {
-                inCatching = true;
-                SetDestination(fov.player.transform.position);
+                inView = true;
+
+                Vector3 dir = Vector3.Normalize(fov.player.transform.position - transform.position);
+
+                Vector3 dest = fov.player.transform.position - (dir * limitDistance);
+                SetDestination(dest);
+
             } else
             {
-                if (inCatching)
+                if (inView)
                 {
                     SetDestination(patrolPoints[index].transform.position);
-                    inCatching = false;
+                    inView = false;
                 }
             }
         }
