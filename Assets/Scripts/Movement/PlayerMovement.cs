@@ -18,11 +18,13 @@ public class PlayerMovement : MonoBehaviour
     private float distance;
     private Vector3 initPosition;
     private State state;
-    private bool move;
     private int doubleJumpCount;
     private float _maxHeight;
     private float _maxDistance;
     private float _speed;
+
+    private bool _jump;
+    private Vector3 _direction;
 
     private void Awake()
     {
@@ -34,8 +36,18 @@ public class PlayerMovement : MonoBehaviour
     {
         state = State.Ground;
         initPosition = transform.position;
-        move = false;
         _speed = 0;
+        _jump = false;
+    }
+
+    public void Jump(bool jmp)
+    {
+        _jump = jmp;
+    }
+
+    public void Direction(Vector3 dir)
+    {
+        _direction = dir;
     }
 
     private void Update()
@@ -44,6 +56,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (state == State.Summit)
         {
+            _jump = false;
             state = State.Fall;
         }
 
@@ -58,7 +71,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (state == State.Ground)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (_jump)
             {
                 doubleJumpCount = 0;
                 state = State.Jump;
@@ -69,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-
+        /*
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow))
@@ -121,8 +134,9 @@ public class PlayerMovement : MonoBehaviour
         {
             move = false;
         }
+        */
 
-        if (move)
+        if (_direction != Vector3.zero)
         {
             if (_speed < settings.maxSpeed)
                 _speed += Time.deltaTime * settings.acceleration;
@@ -136,7 +150,7 @@ public class PlayerMovement : MonoBehaviour
                 _speed = 0;
         }
         if (_speed > 0)
-            transform.position = transform.position + (transform.forward * _speed * Time.deltaTime);
+            transform.position = transform.position + (_direction * _speed * Time.deltaTime);
 
     }
 
@@ -148,7 +162,7 @@ public class PlayerMovement : MonoBehaviour
 
     void UpdateJump()
     {
-        if (Input.GetKeyUp(KeyCode.Space))
+        if (_jump == false)
         {
             distance = _maxDistance - distance;
             state = State.Fall;
@@ -220,7 +234,7 @@ public class PlayerMovement : MonoBehaviour
         }
         */
 
-        if (Input.GetKeyDown(KeyCode.Space) && settings.doubleJump > 0)
+        if (_jump && settings.doubleJump > 0)
         {
             if (doubleJumpCount < settings.doubleJump)
             {

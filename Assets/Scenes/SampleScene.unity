@@ -660,6 +660,7 @@ GameObject:
   - component: {fileID: 1092617153}
   - component: {fileID: 1092617152}
   - component: {fileID: 1092617155}
+  - component: {fileID: 1092617156}
   m_Layer: 0
   m_Name: Jumper
   m_TagString: Untagged
@@ -771,6 +772,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: 6f7e42eebcd8cbf42ab613d5adbaecd3, type: 2}
   feetCollider: {fileID: 1993671478}
+--- !u!114 &1092617156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1092617149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fce284096bd2b80458ce181138e88acc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerMovement: {fileID: 1092617155}
+  moveDirection: {x: 0, y: 0, z: 0}
+  move: {fileID: 7048362539727703417, guid: e4d5df516ec6c0f468a8fd817f96ced8, type: 3}
+  jump: {fileID: 2394465770776532191, guid: e4d5df516ec6c0f468a8fd817f96ced8, type: 3}
+  isJump: 0
 --- !u!1 &1117873120
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,6 +22,6 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
-  maxSpeed: 8.51
-  acceleration: 23.5
-  deceleration: 33
+  maxSpeed: 8.57
+  acceleration: 28.13
+  deceleration: 12.13
