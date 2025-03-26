@@ -159,7 +159,8 @@ public class AgentPatrolAi : MonoBehaviour
         if (timeout > refreshAgentPos)
         {
             timeout = 0;
-            CanSeePlayer();
+            if (!CanSeePlayer())
+                state = AgentState.Wait;
             return;
         }
         if (Vector3.Distance(transform.position, destination) < .1f)

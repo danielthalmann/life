@@ -11,18 +11,26 @@ public class PlayerControlToMovement : MonoBehaviour
     public InputActionReference move;
     public InputActionReference jump;
 
-    public bool isJump;
+    public bool jumping;
 
     // Update is called once per frame
     void Update()
     {
+        if (jump.action.IsPressed() && !jumping)
+        {
+            jumping = true;
+            playerMovement.Jump();
+        }
+        if (!jump.action.IsPressed() && jumping)
+        {
+            jumping = false;
+            playerMovement.StopJump();
+        }
+
         Vector2 direction = move.action.ReadValue<Vector2>();
-        isJump = jump.action.IsPressed();
-
         moveDirection = new Vector3(direction.x, 0, direction.y);
-
         playerMovement.Direction(moveDirection);
-        playerMovement.Jump(isJump);
+        
     }
 
     private void FixedUpdate()

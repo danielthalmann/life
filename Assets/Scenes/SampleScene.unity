@@ -580,13 +580,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.46193978, y: -0.33141357, z: 0.19134171, w: 0.8001032}
-  m_LocalPosition: {x: 3.06, y: 9, z: -2.16}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.52, y: 9.31, z: -14.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 60, y: -45, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &963194229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -644,9 +644,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 963194227}
-  offset: {x: 4, y: 10, z: -4}
+  offset: {x: 0, y: 2.1, z: -20}
   smoothSpeed: 0.025
-  target: {fileID: 1871714819}
+  target: {fileID: 1092617150}
 --- !u!1 &1092617149
 GameObject:
   m_ObjectHideFlags: 0
@@ -772,6 +772,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: 6f7e42eebcd8cbf42ab613d5adbaecd3, type: 2}
   feetCollider: {fileID: 1993671478}
+  _speed: 0
+  _jump: 0
+  _stopJump: 0
 --- !u!114 &1092617156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -788,7 +791,7 @@ MonoBehaviour:
   moveDirection: {x: 0, y: 0, z: 0}
   move: {fileID: 7048362539727703417, guid: e4d5df516ec6c0f468a8fd817f96ced8, type: 3}
   jump: {fileID: 2394465770776532191, guid: e4d5df516ec6c0f468a8fd817f96ced8, type: 3}
-  isJump: 0
+  jumping: 0
 --- !u!1 &1117873120
 GameObject:
   m_ObjectHideFlags: 0
@@ -1483,7 +1486,7 @@ Transform:
   m_GameObject: {fileID: 1993671476}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.17, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1508,8 +1511,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 0.24589834, z: 1}
-  m_Center: {x: 0, y: -0.36, z: 0}
+  m_Size: {x: 1, y: 0.39646626, z: 1}
+  m_Center: {x: 0, y: -0.12471604, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

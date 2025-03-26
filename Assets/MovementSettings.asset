@@ -12,16 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c715d00ff3a94a4ca23efe81b455042, type: 3}
   m_Name: MovementSettings
   m_EditorClassIdentifier: 
-  maxHeight: 0.358
-  maxDistance: 10.1
-  fallDistance: 10.1
-  speedUp: 6.28
-  speedDown: 9.1
-  doubleJump: 1
+  maxHeight: 0.455
+  maxDistance: 4.94
+  fallDistance: 14.02
+  speedUp: 10
+  speedDown: 7.44
+  doubleJump: 2
   doubleJumpReduce: 73.5
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
   maxSpeed: 8.57
-  acceleration: 28.13
-  deceleration: 12.13
+  acceleration: 37.7
+  deceleration: 12.9

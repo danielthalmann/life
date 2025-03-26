@@ -17,14 +17,18 @@ public class PlayerMovement : MonoBehaviour
     private float verticalSpeed;
     private float distance;
     private Vector3 initPosition;
+    private Vector3 _lastPosition;
+    private float _centerOffset;
     private State state;
-    private int doubleJumpCount;
+    private int _doubleJumpCount;
     private float _maxHeight;
     private float _maxDistance;
-    private float _speed;
+    public float _speed;
 
-    private bool _jump;
+    public bool _jump;
+    public bool _stopJump;
     private Vector3 _direction;
+    private Vector3 _lastDirection;
 
     private void Awake()
     {
@@ -35,14 +39,26 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         state = State.Ground;
-        initPosition = transform.position;
+        initPosition = Feet();
+        _centerOffset = initPosition.y - transform.position.y;
+        Debug.Log(_centerOffset);
         _speed = 0;
         _jump = false;
+        _stopJump = false;
     }
 
-    public void Jump(bool jmp)
+    public Vector3 Feet()
     {
-        _jump = jmp;
+        return new Vector3(feetCollider.bounds.center.x, feetCollider.bounds.center.y - (feetCollider.bounds.size.y / 2), feetCollider.bounds.center.z);
+    }
+
+    public void Jump()
+    {
+        _jump = true;
+    }
+    public void StopJump()
+    {
+        _stopJump = true;
     }
 
     public void Direction(Vector3 dir)
@@ -53,104 +69,83 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
 
-
-        if (state == State.Summit)
-        {
-            _jump = false;
-            state = State.Fall;
-        }
-
-        if (state == State.Fall)
-        {
-            UpdateFall();
-        }
-        if (state == State.Jump)
-        {
-            UpdateJump();
-        }
-
-        if (state == State.Ground)
-        {
-            if (_jump)
-            {
-                doubleJumpCount = 0;
-                state = State.Jump;
-                initPosition = transform.position;
-                _maxHeight = settings.maxHeight;
-                _maxDistance = settings.maxDistance;
-                distance = 0;
-            }
-        }
-
-        /*
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                transform.rotation = Quaternion.Euler(0, -135f, 0);
-            }
-            else if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                transform.rotation = Quaternion.Euler(0, -45f, 0);
-            }
-            else
-            {
-                transform.rotation = Quaternion.Euler(0, -90f, 0);
-            }
-            move = true;
-
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                transform.rotation = Quaternion.Euler(0, 135f, 0);
-            }
-            else if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                transform.rotation = Quaternion.Euler(0, 45f, 0);
-            }
-            else
-            {
-                transform.rotation = Quaternion.Euler(0, 90f, 0);
-            }
-            move = true;
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            transform.rotation = Quaternion.Euler(0, -180f, 0);
-            move = true;
-        }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            transform.rotation = Quaternion.Euler(0, 0f, 0);
-            move = true;
-        }
-
-        if (Input.GetKeyUp(KeyCode.RightArrow)
-            || Input.GetKeyUp(KeyCode.LeftArrow)
-            || Input.GetKeyUp(KeyCode.UpArrow)
-            || Input.GetKeyUp(KeyCode.DownArrow))
-        {
-            move = false;
-        }
-        */
-
         if (_direction != Vector3.zero)
         {
             if (_speed < settings.maxSpeed)
                 _speed += Time.deltaTime * settings.acceleration;
             if (_speed > settings.maxSpeed)
                 _speed = settings.maxSpeed;
-        } else
+            _lastDirection = _direction;
+        }
+        else
         {
             if (_speed > 0)
                 _speed -= Time.deltaTime * settings.deceleration;
             if (_speed < 0)
                 _speed = 0;
         }
-        if (_speed > 0)
-            transform.position = transform.position + (_direction * _speed * Time.deltaTime);
+        if (_speed != 0)
+        {
+            transform.rotation = Quaternion.LookRotation(_lastDirection, Vector3.up);
+            transform.position = transform.position + (_lastDirection * _speed * Time.deltaTime);
+        }
+
+
+        if (state == State.Summit)
+        {
+            _lastPosition = Feet();
+            state = State.Fall;
+        }
+
+        if (state == State.Fall)
+        {
+            UpdateFall();
+
+            if (_jump && settings.doubleJump > 0)
+            {
+                _jump = false;
+                _stopJump = false;
+
+                if (_doubleJumpCount < settings.doubleJump)
+                {
+                    _doubleJumpCount++;
+                    state = State.Jump;
+                    initPosition = Feet();
+                    //_maxHeight = _maxHeight * settings.doubleJumpReduce / 100;
+                    _maxDistance = _maxDistance * settings.doubleJumpReduce / 100;
+                    distance = 0;
+                }
+            }
+
+        }
+
+        if (state == State.Jump)
+        {
+            UpdateJump();
+
+            if (_stopJump)
+            {
+                _stopJump = false;
+                distance = _maxDistance - distance;
+                state = State.Summit;
+            }
+
+        }
+
+        if (state == State.Ground)
+        {
+            if (_jump)
+            {
+                _stopJump = false;
+                _jump = false;
+                _doubleJumpCount = 0;
+                state = State.Jump;
+                initPosition = Feet();
+                _maxHeight = settings.maxHeight;
+                _maxDistance = settings.maxDistance;
+                distance = 0;
+            }
+        }
 
     }
 
@@ -162,12 +157,6 @@ public class PlayerMovement : MonoBehaviour
 
     void UpdateJump()
     {
-        if (_jump == false)
-        {
-            distance = _maxDistance - distance;
-            state = State.Fall;
-            return;
-        }
 
         verticalSpeed = Mathf.Lerp(settings.speedUp, settings.speedDown, distance / _maxDistance);
         distance += Time.deltaTime * verticalSpeed;
@@ -179,7 +168,9 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             float newHeight;
-            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance);
+            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
+            if (newHeight < Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2))
+                newHeight = Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2);
 
             transform.position = new Vector3(transform.position.x, newHeight, transform.position.z);
 
@@ -201,79 +192,30 @@ public class PlayerMovement : MonoBehaviour
         {
 
             float newHeight;
-            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance);
-
-            Vector3 boxCastOrigin = new Vector3(feetCollider.bounds.center.x, feetCollider.bounds.center.y, feetCollider.bounds.center.z);
-            Vector3 boxCastSize = new Vector3(feetCollider.bounds.size.x, feetCollider.bounds.size.y, feetCollider.bounds.size.z);
-
-            Vector3 oldOrigin = transform.position;
-            Vector3 newOrigin = new Vector3(transform.position.x, newHeight, transform.position.z);
-            Vector3 direction = newOrigin - oldOrigin;
-            direction.Normalize();
+            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
+            if (newHeight < Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2))
+                newHeight = Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2);
+            
+            _lastPosition = transform.position;
+            Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
 
             RaycastHit hit;
-            bool groundHit = Physics.Raycast(oldOrigin, direction, out hit, feetCollider.bounds.size.y + Vector3.Distance(oldOrigin, newOrigin), settings.groundLayer);
-
+            bool groundHit = Physics.Raycast(_lastPosition, Vector3.down, out hit, 1.0f + Vector3.Distance(_lastPosition, newOrigin), settings.groundLayer);
+            
             if (groundHit)
             {
                 Debug.Log("hit");
-                transform.position = hit.point + (Vector3.up * boxCastSize.y);
+                transform.position = hit.point - (Vector3.up * _centerOffset);
                 state = State.Ground;
             }
             else
             {
                 transform.position = newOrigin;
             }
-            
+
 
         }
-        /*
-        if(IsGrounded())
-        {
-            state = State.Ground;
-        }
-        */
 
-        if (_jump && settings.doubleJump > 0)
-        {
-            if (doubleJumpCount < settings.doubleJump)
-            {
-                doubleJumpCount++;
-                state = State.Jump;
-                initPosition = transform.position;
-                //_maxHeight = _maxHeight * settings.doubleJumpReduce / 100;
-                _maxDistance = _maxDistance * settings.doubleJumpReduce / 100;
-                distance = 0;
-                return;
-            }
-        }
-
-    }
-
-    /// <summary>
-    /// Retourne le temps de vol en seconde du projectile
-    /// </summary>
-    /// <param name="initialSpeed"></param>
-    /// <param name="throwAngle"></param>
-    /// <param name="worldGravity"></param>
-    /// <returns></returns>
-    private float FlyTime(float initialSpeed, float throwAngle, float worldGravity)
-    {
-        return (2 * initialSpeed * Mathf.Sin(Mathf.Deg2Rad * throwAngle)) / worldGravity;
-    }
-
-    /// <summary>
-    /// retourne la hauteur selon la vitesse et l'angle
-    /// </summary>
-    /// <param name="initialSpeed"></param>
-    /// <param name="throwAngle"></param>
-    /// <param name="worldGravity"></param>
-    /// <returns></returns>
-    private float HeighMax(float initialSpeed, float throwAngle, float worldGravity)
-    {
-        float sinus = Mathf.Sin(Mathf.Deg2Rad * throwAngle);
-
-        return (initialSpeed * initialSpeed * sinus * sinus) / (2 * worldGravity);
     }
 
 
@@ -282,8 +224,6 @@ public class PlayerMovement : MonoBehaviour
         return (-height * (step * step)) + (height * distance * step);
     }
 
-
-
     private void OnDrawGizmos()
     {
         RaycastHit hit;
@@ -291,7 +231,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (state == State.Ground)
         {
-            pos = transform.position;
+            pos = Feet();
         } else
         {
             pos = initPosition;
