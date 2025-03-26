@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -5,13 +6,13 @@ public class PlayerMovement : MonoBehaviour
     public enum State
     {
         Ground,
+        Walk,
         Jump,
         Summit,
         Fall,
     }
 
     public MovementSettings settings;
-    
     public Collider feetCollider;
 
     private float verticalSpeed;
@@ -19,16 +20,18 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 initPosition;
     private Vector3 _lastPosition;
     private float _centerOffset;
-    private State state;
+    public State state;
     private int _doubleJumpCount;
     private float _maxHeight;
     private float _maxDistance;
-    public float _speed;
+    private float _speed;
 
-    public bool _jump;
-    public bool _stopJump;
+    private bool _jump;
+    private bool _stopJump;
     private Vector3 _direction;
     private Vector3 _lastDirection;
+    private bool _dash;
+    private bool _stopDash;
 
     private void Awake()
     {
@@ -41,10 +44,11 @@ public class PlayerMovement : MonoBehaviour
         state = State.Ground;
         initPosition = Feet();
         _centerOffset = initPosition.y - transform.position.y;
-        Debug.Log(_centerOffset);
         _speed = 0;
         _jump = false;
         _stopJump = false;
+        _dash = false;
+        _stopDash = false;
     }
 
     public Vector3 Feet()
@@ -55,10 +59,18 @@ public class PlayerMovement : MonoBehaviour
     public void Jump()
     {
         _jump = true;
+        _stopJump = false;
     }
+
     public void StopJump()
     {
         _stopJump = true;
+    }
+
+    public void Dash()
+    {
+        _dash = true;
+        _stopDash = false;
     }
 
     public void Direction(Vector3 dir)
@@ -66,15 +78,41 @@ public class PlayerMovement : MonoBehaviour
         _direction = dir;
     }
 
-    private void Update()
+    private void UpdateMove()
     {
 
         if (_direction != Vector3.zero)
         {
-            if (_speed < settings.maxSpeed)
-                _speed += Time.deltaTime * settings.acceleration;
-            if (_speed > settings.maxSpeed)
-                _speed = settings.maxSpeed;
+            if (_dash)
+            {
+                if (!_stopDash)
+                {
+                    if (_speed < settings.maxDashSpeed)
+                        _speed += Time.deltaTime * (settings.acceleration + settings.dashAcceleration);
+                    if (_speed > settings.maxDashSpeed)
+                    {
+                        _speed = settings.maxDashSpeed;
+                        _stopDash = true;
+                    }
+                }
+                else
+                {
+                    if (_speed > settings.maxSpeed)
+                        _speed -= Time.deltaTime * (settings.deceleration + settings.acceleration);
+                    if (_speed < settings.maxSpeed)
+                    {
+                        _speed = settings.maxSpeed;
+                        _dash = false;
+                    }
+                }
+            }
+            else
+            {
+                if (_speed < settings.maxSpeed)
+                    _speed += Time.deltaTime * settings.acceleration;
+                if (_speed > settings.maxSpeed)
+                    _speed = settings.maxSpeed;
+            }
             _lastDirection = _direction;
         }
         else
@@ -88,8 +126,21 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.rotation = Quaternion.LookRotation(_lastDirection, Vector3.up);
             transform.position = transform.position + (_lastDirection * _speed * Time.deltaTime);
+
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, transform.forward, out hit, settings.frontDistanceDetection)) // , settings.groundLayer))
+            {
+                _speed = 0;
+                transform.position = new Vector3(hit.point.x, transform.position.y, hit.point.z) - (transform.forward * settings.frontDistanceDetection);
+            }
+
         }
 
+    }
+
+    private void Update()
+    {
+        UpdateMove();
 
         if (state == State.Summit)
         {
@@ -145,15 +196,32 @@ public class PlayerMovement : MonoBehaviour
                 _maxDistance = settings.maxDistance;
                 distance = 0;
             }
-        }
 
+            RaycastHit hit;
+            bool groundHit = Physics.Raycast(transform.position, Vector3.down, out hit, 1.0f, settings.groundLayer);
+
+            if (groundHit)
+            {
+                transform.position = hit.point - (Vector3.up * _centerOffset);
+                this.transform.parent = hit.collider.gameObject.transform;
+            }
+            else
+            {
+                this.transform.parent = null;
+                Debug.Log("not hit");
+                initPosition = Feet();
+                _lastPosition = Feet();
+                _maxHeight = settings.maxHeight;
+                distance = settings.maxDistance;
+                state = State.Fall;
+            }
+        }
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
     }
-
 
     void UpdateJump()
     {
@@ -169,14 +237,31 @@ public class PlayerMovement : MonoBehaviour
         {
             float newHeight;
             newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
-            if (newHeight < Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2))
-                newHeight = Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2);
+            //if (newHeight < Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2))
+            //    newHeight = Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2);
 
-            transform.position = new Vector3(transform.position.x, newHeight, transform.position.z);
+            _lastPosition = transform.position;
+            Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
+
+            RaycastHit hit;
+            if (Physics.Raycast(_lastPosition, Vector3.up, out hit, settings.headDistanceDetection))
+            {
+                Debug.Log(transform.position);
+                transform.position = new Vector3(transform.position.x, hit.point.y - settings.headDistanceDetection, transform.position.z);
+                Debug.Log("hit head");
+                Debug.Log(transform.position);
+                initPosition = Feet();
+                state = State.Summit;
+            }
+            else
+            {
+                transform.position = newOrigin;
+                transform.parent = null;
+            }
+
 
         }
     }
-
 
     void UpdateFall()
     {
@@ -184,40 +269,37 @@ public class PlayerMovement : MonoBehaviour
         verticalSpeed = Mathf.Lerp(settings.speedUp, settings.speedDown, distance / _maxDistance);
         distance += Time.deltaTime * verticalSpeed;
 
-        if (distance > (settings.maxDistance + settings.fallDistance))
-        {
-            state = State.Ground;
-        }
-        else
+        //if (distance > (settings.maxDistance + settings.fallDistance))
+        //{
+        //    state = State.Ground;
+        //}
+        //else
         {
 
             float newHeight;
             newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
-            if (newHeight < Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2))
-                newHeight = Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2);
+            //if (newHeight < _centerOffset + (feetCollider.bounds.size.y / 2))
+            //    newHeight = _centerOffset + (feetCollider.bounds.size.y / 2);
             
             _lastPosition = transform.position;
             Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
 
             RaycastHit hit;
-            bool groundHit = Physics.Raycast(_lastPosition, Vector3.down, out hit, 1.0f + Vector3.Distance(_lastPosition, newOrigin), settings.groundLayer);
-            
-            if (groundHit)
+            if (Physics.Raycast(_lastPosition, Vector3.down, out hit, 1.0f, settings.groundLayer))
             {
-                Debug.Log("hit");
                 transform.position = hit.point - (Vector3.up * _centerOffset);
+                transform.parent = hit.collider.gameObject.transform;
                 state = State.Ground;
             }
             else
             {
                 transform.position = newOrigin;
+                transform.parent = null;
             }
-
 
         }
 
     }
-
 
     private float HeightInStep(float step, float height, float distance)
     {
@@ -263,7 +345,13 @@ public class PlayerMovement : MonoBehaviour
             Gizmos.DrawLine(from, to);
             from = to;
         }
+        Gizmos.color = Color.blue;
+        //float thickness = 30;
+        //Vector3 endPos = transform.position + (transform.forward * settings.frontDistanceDetection);
+        Gizmos.DrawLine(transform.position, transform.position + (transform.forward * settings.frontDistanceDetection));
+        //Handles.DrawBezier(transform.position, endPos, transform.position, endPos, Color.magenta, null, thickness);
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(transform.position, transform.position + (transform.up * settings.headDistanceDetection));
 
-        
     }
 }

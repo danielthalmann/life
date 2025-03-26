@@ -33,14 +33,34 @@ public class MovementSettings : ScriptableObject
 
     [Header("Walk")]
 
-    [Range(0.5f, 20f)]
+    [Range(0.5f, 60f)]
     public float maxSpeed;
 
     [Range(0.1f, 50f)]
     public float acceleration;
-    
     [Range(0.1f, 50f)]
     public float deceleration;
-    
+
+    [Header("Run")]
+
+    [Range(0.5f, 60f)]
+    public float maxRunSpeed;
+
+    [Header("Dash")]
+
+    [Range(0.5f, 60f)]
+    public float maxDashSpeed;
+    [Range(0.1f, 50f)]
+    public float dashAcceleration;
+
+    [Header("Front")]
+
+    [Range(0.1f, 5f)]
+    public float frontDistanceDetection;
+
+    [Header("Head")]
+
+    [Range(0.1f, 5f)]
+    public float headDistanceDetection;
 
 }

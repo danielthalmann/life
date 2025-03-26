@@ -9,9 +9,11 @@ public class PlayerControlToMovement : MonoBehaviour
     public Vector3 moveDirection;
 
     public InputActionReference move;
+    public InputActionReference dash;
     public InputActionReference jump;
 
     public bool jumping;
+    public bool dashed;
 
     // Update is called once per frame
     void Update()
@@ -26,6 +28,17 @@ public class PlayerControlToMovement : MonoBehaviour
             jumping = false;
             playerMovement.StopJump();
         }
+
+        if (dash.action.IsPressed() && !dashed)
+        {
+            dashed = true;
+            playerMovement.Dash();
+        }
+        if (!dash.action.IsPressed() && dashed)
+        {
+            dashed = false;
+        }
+
 
         Vector2 direction = move.action.ReadValue<Vector2>();
         moveDirection = new Vector3(direction.x, 0, direction.y);
