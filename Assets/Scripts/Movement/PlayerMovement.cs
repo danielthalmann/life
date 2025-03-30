@@ -18,8 +18,6 @@ public class PlayerMovement : MonoBehaviour
     private float verticalSpeed;
     private float distance;
     private Vector3 initPosition;
-    private Vector3 _lastPosition;
-    private float _centerOffset;
     public State state;
     private int _doubleJumpCount;
     private float _maxHeight;
@@ -42,19 +40,12 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         state = State.Ground;
-        initPosition = Feet();
-        _centerOffset = initPosition.y - transform.position.y;
+        initPosition = transform.position;
         _speed = 0;
         _jump = false;
         _stopJump = false;
         _dash = false;
         _stopDash = false;
-    }
-
-    public Vector3 Feet()
-    {
-        //return transform.position;
-        return new Vector3(feetCollider.bounds.center.x, feetCollider.bounds.center.y - (feetCollider.bounds.size.y / 2), feetCollider.bounds.center.z);
     }
 
     public void Jump()
@@ -145,7 +136,6 @@ public class PlayerMovement : MonoBehaviour
 
         if (state == State.Summit)
         {
-            _lastPosition = Feet();
             state = State.Fall;
         }
 
@@ -160,9 +150,11 @@ public class PlayerMovement : MonoBehaviour
 
                 if (_doubleJumpCount < settings.doubleJump)
                 {
+                    _stopJump = false;
+                    _jump = false;
                     _doubleJumpCount++;
                     state = State.Jump;
-                    initPosition = Feet();
+                    initPosition = transform.position;
                     //_maxHeight = _maxHeight * settings.doubleJumpReduce / 100;
                     _maxDistance = _maxDistance * settings.doubleJumpReduce / 100;
                     distance = 0;
@@ -192,35 +184,41 @@ public class PlayerMovement : MonoBehaviour
                 _jump = false;
                 _doubleJumpCount = 0;
                 state = State.Jump;
-                initPosition = Feet();
+                initPosition = transform.position;
                 _maxHeight = settings.maxHeight;
                 _maxDistance = settings.maxDistance;
                 distance = 0;
             }
 
-            RaycastHit hit;
-            bool groundHit = Physics.Raycast(transform.position, Vector3.down, out hit, 1.0f, settings.groundLayer);
+            GroundDetection();
 
-            if (groundHit)
-            {
-                transform.position = hit.point - (Vector3.up * _centerOffset);
-                this.transform.parent = hit.collider.gameObject.transform;
-            }
-            else
-            {
-                this.transform.parent = null;
-                initPosition = Feet();
-                _lastPosition = Feet();
-                _maxHeight = settings.maxHeight;
-                distance = settings.maxDistance;
-                state = State.Fall;
-            }
         }
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
+    }
+
+
+    void GroundDetection()
+    {
+        RaycastHit hit;
+        bool groundHit = Physics.Raycast(transform.position, Vector3.down, out hit, settings.groundDistanceDetection + 0.1f, settings.groundLayer);
+
+        if (groundHit)
+        {
+            transform.position = new Vector3(hit.point.x, hit.point.y + settings.groundDistanceDetection, hit.point.z);
+            this.transform.parent = hit.collider.gameObject.transform;
+        }
+        else
+        {
+            this.transform.parent = null;
+            initPosition = transform.position;
+            _maxHeight = settings.maxHeight;
+            distance = settings.maxDistance;
+            state = State.Fall;
+        }
     }
 
     void UpdateJump()
@@ -236,18 +234,20 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             float newHeight;
-            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
-            //if (newHeight < Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2))
-            //    newHeight = Mathf.Abs(_centerOffset) + (feetCollider.bounds.size.y / 2);
+            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) + settings.groundDistanceDetection;
 
-            _lastPosition = transform.position;
-            Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
+            Vector3 newOrigin = new Vector3(transform.position.x, newHeight, transform.position.z);
 
+            Debug.DrawLine(transform.position, newOrigin, Color.white);
+
+            //
+            // Détection si le personnage touche avec sa tête
+            //
             RaycastHit hit;
-            if (Physics.Raycast(_lastPosition, Vector3.up, out hit, settings.headDistanceDetection, settings.groundLayer))
+            if (Physics.Raycast(transform.position, Vector3.up, out hit, newHeight - transform.position.y + settings.headDistanceDetection, settings.groundLayer))
             {
                 transform.position = new Vector3(transform.position.x, hit.point.y - settings.headDistanceDetection, transform.position.z);
-                initPosition = Feet();
+                //initPosition = transform.position;
                 state = State.Summit;
             }
             else
@@ -267,18 +267,18 @@ public class PlayerMovement : MonoBehaviour
         distance += Time.deltaTime * verticalSpeed;
 
         float newHeight;
-        newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
-        //if (newHeight < _centerOffset + (feetCollider.bounds.size.y / 2))
-        //    newHeight = _centerOffset + (feetCollider.bounds.size.y / 2);
-            
-        _lastPosition = transform.position;
-        Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
+        newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) + settings.groundDistanceDetection;
+
+        Vector3 newOrigin = new Vector3(transform.position.x, newHeight, transform.position.z);
+
+        Debug.DrawLine(transform.position, newOrigin, Color.white);
 
         RaycastHit hit;
-        if (Physics.Raycast(_lastPosition, Vector3.down, out hit, 1.0f, settings.groundLayer))
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, transform.position.y - newHeight + settings.groundDistanceDetection, settings.groundLayer))
         {
-            transform.position = hit.point - (Vector3.up * _centerOffset);
+            transform.position = new Vector3(transform.position.x, hit.point.y + settings.groundDistanceDetection, transform.position.z);
             transform.parent = hit.collider.gameObject.transform;
+            //initPosition = transform.position;
             state = State.Ground;
         }
         else
@@ -286,7 +286,6 @@ public class PlayerMovement : MonoBehaviour
             transform.position = newOrigin;
             transform.parent = null;
         }
-
 
     }
 
@@ -302,7 +301,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (state == State.Ground)
         {
-            pos = Feet();
+            pos = transform.position;
         } else
         {
             pos = initPosition;
@@ -341,6 +340,9 @@ public class PlayerMovement : MonoBehaviour
         //Handles.DrawBezier(transform.position, endPos, transform.position, endPos, Color.magenta, null, thickness);
         Gizmos.color = Color.green;
         Gizmos.DrawLine(transform.position, transform.position + (transform.up * settings.headDistanceDetection));
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + (-transform.up * settings.groundDistanceDetection));
 
     }
 }

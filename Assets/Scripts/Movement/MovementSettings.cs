@@ -61,4 +61,9 @@ public class MovementSettings : ScriptableObject
     [Range(0.1f, 5f)]
     public float headDistanceDetection;
 
+    [Header("Ground")]
+
+    [Range(0.1f, 5f)]
+    public float groundDistanceDetection;
+
 }
