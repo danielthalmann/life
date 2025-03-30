@@ -10,9 +10,7 @@ public class MovementSettings : ScriptableObject
     public float maxHeight;
     [Range(0, 40)]
     public float maxDistance;
-    [Range(0, 40)]
-    public float fallDistance;
-    
+   
 
     [Header("Jump speed")]
 

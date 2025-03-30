@@ -53,6 +53,7 @@ public class PlayerMovement : MonoBehaviour
 
     public Vector3 Feet()
     {
+        //return transform.position;
         return new Vector3(feetCollider.bounds.center.x, feetCollider.bounds.center.y - (feetCollider.bounds.size.y / 2), feetCollider.bounds.center.z);
     }
 
@@ -208,7 +209,6 @@ public class PlayerMovement : MonoBehaviour
             else
             {
                 this.transform.parent = null;
-                Debug.Log("not hit");
                 initPosition = Feet();
                 _lastPosition = Feet();
                 _maxHeight = settings.maxHeight;
@@ -244,12 +244,9 @@ public class PlayerMovement : MonoBehaviour
             Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
 
             RaycastHit hit;
-            if (Physics.Raycast(_lastPosition, Vector3.up, out hit, settings.headDistanceDetection))
+            if (Physics.Raycast(_lastPosition, Vector3.up, out hit, settings.headDistanceDetection, settings.groundLayer))
             {
-                Debug.Log(transform.position);
                 transform.position = new Vector3(transform.position.x, hit.point.y - settings.headDistanceDetection, transform.position.z);
-                Debug.Log("hit head");
-                Debug.Log(transform.position);
                 initPosition = Feet();
                 state = State.Summit;
             }
@@ -269,35 +266,27 @@ public class PlayerMovement : MonoBehaviour
         verticalSpeed = Mathf.Lerp(settings.speedUp, settings.speedDown, distance / _maxDistance);
         distance += Time.deltaTime * verticalSpeed;
 
-        //if (distance > (settings.maxDistance + settings.fallDistance))
-        //{
-        //    state = State.Ground;
-        //}
-        //else
-        {
-
-            float newHeight;
-            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
-            //if (newHeight < _centerOffset + (feetCollider.bounds.size.y / 2))
-            //    newHeight = _centerOffset + (feetCollider.bounds.size.y / 2);
+        float newHeight;
+        newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) - _centerOffset;
+        //if (newHeight < _centerOffset + (feetCollider.bounds.size.y / 2))
+        //    newHeight = _centerOffset + (feetCollider.bounds.size.y / 2);
             
-            _lastPosition = transform.position;
-            Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
+        _lastPosition = transform.position;
+        Vector3 newOrigin = new Vector3(_lastPosition.x, newHeight, _lastPosition.z);
 
-            RaycastHit hit;
-            if (Physics.Raycast(_lastPosition, Vector3.down, out hit, 1.0f, settings.groundLayer))
-            {
-                transform.position = hit.point - (Vector3.up * _centerOffset);
-                transform.parent = hit.collider.gameObject.transform;
-                state = State.Ground;
-            }
-            else
-            {
-                transform.position = newOrigin;
-                transform.parent = null;
-            }
-
+        RaycastHit hit;
+        if (Physics.Raycast(_lastPosition, Vector3.down, out hit, 1.0f, settings.groundLayer))
+        {
+            transform.position = hit.point - (Vector3.up * _centerOffset);
+            transform.parent = hit.collider.gameObject.transform;
+            state = State.Ground;
         }
+        else
+        {
+            transform.position = newOrigin;
+            transform.parent = null;
+        }
+
 
     }
 
@@ -322,7 +311,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 from;
         Vector3 to;
 
-        float step = ((settings.maxDistance + settings.fallDistance) / 30.0f);
+        float step = ((settings.maxDistance + 10) / 30.0f);
         float current = step;
 
         from = pos;
