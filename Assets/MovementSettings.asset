@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHeight: 0.455
   maxDistance: 4.94
-  fallDistance: 21.96
   speedUp: 10
   speedDown: 7.44
   doubleJump: 2
@@ -30,3 +29,4 @@ MonoBehaviour:
   dashAcceleration: 33.4
   frontDistanceDetection: 0.64
   headDistanceDetection: 1.08
+  groundDistanceDetection: 0.55

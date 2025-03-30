@@ -17,7 +17,7 @@ public class PlayerMovement : MonoBehaviour
 
     private float verticalSpeed;
     private float distance;
-    private Vector3 initPosition;
+    private float _verticalInit;
     public State state;
     private int _doubleJumpCount;
     private float _maxHeight;
@@ -40,7 +40,7 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         state = State.Ground;
-        initPosition = transform.position;
+        _verticalInit = transform.position.y;
         _speed = 0;
         _jump = false;
         _stopJump = false;
@@ -154,7 +154,7 @@ public class PlayerMovement : MonoBehaviour
                     _jump = false;
                     _doubleJumpCount++;
                     state = State.Jump;
-                    initPosition = transform.position;
+                    _verticalInit = transform.position.y;
                     //_maxHeight = _maxHeight * settings.doubleJumpReduce / 100;
                     _maxDistance = _maxDistance * settings.doubleJumpReduce / 100;
                     distance = 0;
@@ -184,7 +184,7 @@ public class PlayerMovement : MonoBehaviour
                 _jump = false;
                 _doubleJumpCount = 0;
                 state = State.Jump;
-                initPosition = transform.position;
+                _verticalInit = transform.position.y;
                 _maxHeight = settings.maxHeight;
                 _maxDistance = settings.maxDistance;
                 distance = 0;
@@ -214,7 +214,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             this.transform.parent = null;
-            initPosition = transform.position;
+            _verticalInit = transform.position.y;
             _maxHeight = settings.maxHeight;
             distance = settings.maxDistance;
             state = State.Fall;
@@ -234,7 +234,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             float newHeight;
-            newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) + settings.groundDistanceDetection;
+            newHeight = _verticalInit + HeightInStep(distance, _maxHeight, _maxDistance) + settings.groundDistanceDetection;
 
             Vector3 newOrigin = new Vector3(transform.position.x, newHeight, transform.position.z);
 
@@ -247,7 +247,7 @@ public class PlayerMovement : MonoBehaviour
             if (Physics.Raycast(transform.position, Vector3.up, out hit, newHeight - transform.position.y + settings.headDistanceDetection, settings.groundLayer))
             {
                 transform.position = new Vector3(transform.position.x, hit.point.y - settings.headDistanceDetection, transform.position.z);
-                //initPosition = transform.position;
+                _verticalInit = transform.position.y;
                 state = State.Summit;
             }
             else
@@ -267,7 +267,7 @@ public class PlayerMovement : MonoBehaviour
         distance += Time.deltaTime * verticalSpeed;
 
         float newHeight;
-        newHeight = initPosition.y + HeightInStep(distance, _maxHeight, _maxDistance) + settings.groundDistanceDetection;
+        newHeight = _verticalInit + HeightInStep(distance, _maxHeight, _maxDistance) + settings.groundDistanceDetection;
 
         Vector3 newOrigin = new Vector3(transform.position.x, newHeight, transform.position.z);
 
@@ -278,7 +278,7 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.position = new Vector3(transform.position.x, hit.point.y + settings.groundDistanceDetection, transform.position.z);
             transform.parent = hit.collider.gameObject.transform;
-            //initPosition = transform.position;
+            _verticalInit = transform.position.y;
             state = State.Ground;
         }
         else
@@ -304,7 +304,7 @@ public class PlayerMovement : MonoBehaviour
             pos = transform.position;
         } else
         {
-            pos = initPosition;
+            pos = new Vector3(transform.position.x, _verticalInit, transform.position.z);
         }
 
         Vector3 from;
