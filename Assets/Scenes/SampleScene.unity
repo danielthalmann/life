@@ -1071,7 +1071,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: 6f7e42eebcd8cbf42ab613d5adbaecd3, type: 2}
-  feetCollider: {fileID: 1993671478}
   state: 0
 --- !u!114 &1092617156
 MonoBehaviour:
@@ -1085,13 +1084,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fce284096bd2b80458ce181138e88acc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerMovement: {fileID: 1092617155}
   moveDirection: {x: 0, y: 0, z: 0}
   move: {fileID: 7048362539727703417, guid: e4d5df516ec6c0f468a8fd817f96ced8, type: 3}
   dash: {fileID: 558413240668172416, guid: e4d5df516ec6c0f468a8fd817f96ced8, type: 3}
   jump: {fileID: 2394465770776532191, guid: e4d5df516ec6c0f468a8fd817f96ced8, type: 3}
-  jumping: 0
-  dashed: 0
+  fixHorizontal: 0
+  fixVertical: 1
 --- !u!1 &1117873120
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour, PlayerMovementInterface
 {
     public enum State
     {
@@ -13,7 +13,6 @@ public class PlayerMovement : MonoBehaviour
     }
 
     public MovementSettings settings;
-    public Collider feetCollider;
 
     private float verticalSpeed;
     private float distance;
