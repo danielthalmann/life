@@ -1,5 +1,7 @@
-[<img height="40px" src="https://static.itch.io/images/badge.svg">](https://itch.io/jam/slimy-jam-7)
+[<img height="40px" src="https://static.itch.io/images/badge.svg">](https://aliend.itch.io/)
 
-# Slimy Jam 7
+# Life
 
-Jeu en préparation pour la Slimy Jam 7 2025 
+Jeu en préparation
+
+
